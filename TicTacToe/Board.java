@@ -129,40 +129,6 @@ public class Board {
         return evalLine(diag);
     }
 
-    /** 
-     * Checks if the board is in a valid state (at most one line has been completed).
-     * @return false if the board has more than one line completed or an invalid number of Xs and Os;
-     *      true otherwise.
-    */
-    public boolean isValid() {
-        // Check if there is an invalid number of Xs and Os
-        {
-            int xCount = 0, oCount = 0;
-            for (int cell : grid) {
-                if (cell == X) xCount++;
-                else if (cell == O) oCount++;
-            }
-            int diff = xCount - oCount;
-            if(diff > 1 || 0 > diff) return false;
-        }
-
-        // Check if more than one line completed
-        {
-            int lines = 0;
-            // Rows/columns
-            for (int i = 0; i < size; i++) {
-                lines += (evalRow(i) != NA) ? 1 : 0;
-                lines += (evalCol(i) != NA) ? 1 : 0;
-                if (lines > 2) return false;
-            }
-            // Diagonals
-            lines += (evalDiagL() != NA) ? 1 : 0;
-            lines += (evalDiagR() != NA) ? 1 : 0;
-            if (lines > 2) return false;
-        }
-        return true;
-    }
-
     @Override
     public String toString() {
         return boardString(false);
@@ -268,9 +234,68 @@ public class Board {
         return output.toString();
     }
 
-    // TODO
+    /**
+     * Evaluates the state of the game.
+     * @return X or O if there is a winner, DRAW if there are no more moves left,
+     *  NA if the game is in progress, or BAD if the board state is invalid.
+     */
     public int evalGame() {
-        return 0;
+        // Check if there is an invalid number of Xs and Os
+        {
+            int xCount = 0, oCount = 0;
+            for (int cell : grid) {
+                if (cell == X) xCount++;
+                else if (cell == O) oCount++;
+            }
+            int diff = xCount - oCount;
+            if(diff > 1 || 0 > diff) return BAD;
+            else if(xCount + oCount == size * size) return DRAW;
+        }
+
+        int winner = NA;
+        // Check for winner (or if more than one line completed)
+        {
+            int lines = 0;
+            // Rows/columns
+            for (int i = 0; i < size; i++) {
+                if (evalRow(i) != NA) {
+                    lines++;
+                    winner = evalRow(i);
+                }
+                if (evalCol(i) != NA) {
+                    lines++;
+                    winner = evalCol(i);
+                }
+                if (lines > 1) return BAD;
+            }
+            // Diagonals
+            if (evalDiagL() != NA) {
+                lines++;
+                winner = evalDiagL();
+            }
+            if (evalDiagR() != NA) {
+                lines++;
+                winner = evalDiagR();
+            }
+            if (lines > 1) return BAD;
+        }
+        return winner;
+    }
+
+    /**
+     * Returns the string representation of the given state integer.
+     * @param state An integer representing a cell or board state.
+     * @return X, O, NA, BAD, or DRAW.
+     */
+    public static String stateIntString(int state) {
+        switch(state) {
+            case -2: return "BAD";
+            case -1: return "DRAW";
+            case 0: return "N/A";
+            case 1: return "X";
+            case 2: return "O";
+            default: return "";
+        }
     }
 
     public static void main(String[] args) {
@@ -279,15 +304,15 @@ public class Board {
         Board test = new Board(size);
         Random rand = new Random();
         // The set of possible cell contents to randomly pick from
-        int[] dist = {NA, O, O};
+        int[] dist = {NA, X, O};
         for (int i = 0; i < size * size; i++) {
             test.set(i / size, i % size, dist[rand.nextInt(dist.length)]);
         }
 
         System.out.println(divider);
         System.out.println(test);
-        System.out.print("Valid config? ");
-        System.out.println(test.isValid());
+        System.out.print("Game state? ");
+        System.out.println(stateIntString(test.evalGame()));
         System.out.println(divider);
     }
 
