@@ -161,14 +161,14 @@ public class Board {
         contents.put(NA, ' ');
         contents.put(X, 'X');
         contents.put(O, 'O');
-        char cross       = '\u254B', 
-             vert        = '\u2503', 
-             horiz       = '\u2501',
-             vertLined   = '\u2542', 
-             horizLined  = '\u253F',
-             diagL       = '\u2572', 
-             diagR       = '\u2571', 
-             diagX       = '\u2573';
+        char cross       = '+', //'\u254B', 
+             vert        = '|', //'\u2503', 
+             horiz       = '-', //'\u2501',
+             vertLined   = '-', //'\u2542', 
+             horizLined  = '|', //'\u253F',
+             diagL       = '\\', //'\u2572', 
+             diagR       = '/', //'\u2571', 
+             diagX       = 'X'; //'\u2573';
         
         StringBuilder output = new StringBuilder((2 * size - 1) * (4 * size));
         int promptNum = 1;
