@@ -129,11 +129,6 @@ public class Board {
         return evalLine(diag);
     }
 
-    @Override
-    public String toString() {
-        return boardString(false);
-    }
-
     private boolean onDiagL(int row, int col) { 
         return row == col;
     }
@@ -149,8 +144,66 @@ public class Board {
     private boolean isHighlighted(int row, int col, boolean lineRow, boolean lineCol, boolean lineDiagL, boolean lineDiagR) {
         return lineRow || lineCol || (lineDiagL && onDiagL(row, col)) || (lineDiagR && onDiagR(row, col));
     }
+   
+    /**
+     * @return The next player to move, or DRAW/BAD if the game is drawn or in an invalid state.
+     */
+    public int nextTurn() {
+        // ! Note: calculating the next move like this with an array check instead of just an extra class
+        // ! variable is inefficient, but a little simpler in the long run. Should be fine with small board
+        // ! sizes, but if performance is a concern, a refactoring may be in order.
+        int xCount = 0, oCount = 0;
+        for (int cell : grid) {
+            if (cell == X) xCount++;
+            else if (cell == O) oCount++;
+        }
+        if(xCount + oCount == size * size) return DRAW;
+        else if(xCount - oCount == 0) return X;
+        else if(xCount - oCount == 1) return O;
+        else return BAD;
+    }
 
     /**
+     * Evaluates the state of the game.
+     * @return X or O if there is a winner, DRAW if there are no more moves left,
+     *  NA if the game is in progress, or BAD if the board state is invalid.
+     */
+    public int evalGame() {
+        // Check if there is an invalid number of Xs and Os
+        int turnState = nextTurn();
+        if (turnState != X && turnState != O) return turnState;
+
+        int winner = NA;
+        // Check for winner (or if more than one line completed)
+        {
+            int lines = 0;
+            // Rows/columns
+            for (int i = 0; i < size; i++) {
+                if (evalRow(i) != NA) {
+                    lines++;
+                    winner = evalRow(i);
+                }
+                if (evalCol(i) != NA) {
+                    lines++;
+                    winner = evalCol(i);
+                }
+                if (lines > 1) return BAD;
+            }
+            // Diagonals
+            if (evalDiagL() != NA) {
+                lines++;
+                winner = evalDiagL();
+            }
+            if (evalDiagR() != NA) {
+                lines++;
+                winner = evalDiagR();
+            }
+            if (lines > 1) return BAD;
+        }
+        return winner;
+    }
+
+     /**
      * Builds a string representation of the board for printing.
      * @param prompts Whether or not the representation should include number prompts.
      * @return The string representation of the board, tab-indented.
@@ -234,54 +287,11 @@ public class Board {
         return output.toString();
     }
 
-    /**
-     * Evaluates the state of the game.
-     * @return X or O if there is a winner, DRAW if there are no more moves left,
-     *  NA if the game is in progress, or BAD if the board state is invalid.
-     */
-    public int evalGame() {
-        // Check if there is an invalid number of Xs and Os
-        {
-            int xCount = 0, oCount = 0;
-            for (int cell : grid) {
-                if (cell == X) xCount++;
-                else if (cell == O) oCount++;
-            }
-            int diff = xCount - oCount;
-            if(diff > 1 || 0 > diff) return BAD;
-            else if(xCount + oCount == size * size) return DRAW;
-        }
-
-        int winner = NA;
-        // Check for winner (or if more than one line completed)
-        {
-            int lines = 0;
-            // Rows/columns
-            for (int i = 0; i < size; i++) {
-                if (evalRow(i) != NA) {
-                    lines++;
-                    winner = evalRow(i);
-                }
-                if (evalCol(i) != NA) {
-                    lines++;
-                    winner = evalCol(i);
-                }
-                if (lines > 1) return BAD;
-            }
-            // Diagonals
-            if (evalDiagL() != NA) {
-                lines++;
-                winner = evalDiagL();
-            }
-            if (evalDiagR() != NA) {
-                lines++;
-                winner = evalDiagR();
-            }
-            if (lines > 1) return BAD;
-        }
-        return winner;
+    @Override
+    public String toString() {
+        return boardString(false);
     }
-
+    
     /**
      * Returns the string representation of the given state integer.
      * @param state An integer representing a cell or board state.
@@ -297,6 +307,7 @@ public class Board {
             default: return "";
         }
     }
+    
 
     public static void main(String[] args) {
         String divider = "=======================================================================";
